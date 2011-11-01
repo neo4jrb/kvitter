@@ -1,0 +1,36 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Id:</b>
+  <%= @link.id %>
+</p>
+
+<p>
+  <b>Url:</b>
+  <%= @link.url %>
+</p>
+
+<p>
+  <b>Short Urls:</b>
+  <% @link.short_urls do |link| %>
+    <%= link_to link, link %> <br/>
+  <% end %>
+</p>
+
+<% if @link.redirected_link %>
+<p>
+  <b>Redirects to</b>
+  <%= link_to @link.redirected_link, @link.redirected_link %>
+</p>
+<% end %>
+
+<p>
+  <b>Tweets:</b><br/>
+  <% @tweets.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+  <%= will_paginate(@tweets) %>
+</p>
+
+<%= link_to 'Edit', edit_link_path(@link) %> |
+<%= link_to 'Back', links_path %>

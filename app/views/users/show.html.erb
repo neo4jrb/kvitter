@@ -1,0 +1,31 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Twid:</b>
+  <%= @user.twid %>
+</p>
+
+<p>
+  <b>Link:</b>
+  <%= @user.link %>
+</p>
+
+
+<p>
+  <b>Knows:</b><br/>
+  <% @knows.each do |user| %>
+    <%= link_to user, user %> <br/>
+  <% end %>
+  <%= will_paginate(@knows) %>
+</p>
+
+<p>
+  <b>Mentioned from:</b><br/>
+  <% @mentioned_from.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+</p>
+
+
+<%= link_to 'Edit', edit_user_path(@user) %> |
+<%= link_to 'Back', users_path %>

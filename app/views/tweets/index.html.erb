@@ -1,0 +1,29 @@
+<h1>Listing tweets</h1>
+
+<table>
+  <tr>
+    <th>Text</th>
+    <th>Link</th>
+    <th>Date</th>
+    <th>Tweet</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @tweets.each do |tweet| %>
+  <tr>
+    <td><%= tweet.text %></td>
+    <td><%= tweet.link %></td>
+    <td><%= tweet.date %></td>
+    <td><%= tweet.tweet_id %></td>
+    <td><%= link_to 'Show', tweet %></td>
+    <td><%= link_to 'Edit', edit_tweet_path(tweet) %></td>
+    <td><%= link_to 'Destroy', tweet, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Tweet', new_tweet_path %>

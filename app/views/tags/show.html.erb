@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Name:</b>
+  <%= @tag.name %>
+</p>
+
+<p>
+  <b>Tweets:</b><br/>
+  <% @tweets.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+  <%= will_paginate(@tweets) %>
+</p>
+
+<%= button_to "Search", [:search, @tag], :method => :get %>
+
+
+<%= link_to 'Edit', edit_tag_path(@tag) %> |
+<%= link_to 'Back', tags_path %>

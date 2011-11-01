@@ -1,0 +1,189 @@
+== Neo4j.rb example application
+
+=== Installation
+
+Make sure you have Java JDK 1.6 installed
+
+Install and use Jruby 1.6.5
+  rvm use jruby-1.6.5
+
+Install Rails (example 3.1.1)
+  gem install rails
+
+=== Create a rails project
+
+Use my rails template which will disable active record and enable neo4j instead
+
+  rails new kvitter -m http://andreasronge.github.com/rails3.rb
+
+Edit the Gemfile and add the twitter gem
+  cd kvitter
+  emacs Gemfile # and add
+  gem 'twitter'
+
+Download all the dependencies
+  bundle
+
+=== Scaffold
+
+rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id --has_n tags mentions links --has_one tweeted_by:tweeted
+rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
+rails generate scaffold Link url:string --has_n tweets:links
+rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
+
+
+=== Create Tag and Search Twitter API
+
+app/models/tag.rb
+
+  def search
+    search = Twitter::Search.new
+    #search.hashtag(name).each { |p| puts p.inspect }
+    search.hashtag(name)
+  end
+
+app/controllers/tag_controller.rb:
+
+  def create
+    @tag = Tag.new(params[:tag])
+
+    respond_to do |format|
+      if @tag.save search = @tag.search
+     search.each do |item|
+        parsed_tweet_hash = Tweet.parse(item)
+        puts "parsed_tweet_hash=#{parsed_tweet_hash.inspect}"
+        tweet = Tweet.create!(parsed_tweet_hash)
+        parse(tweet)
+        puts "created #{tweet.props.inspect}"
+     end
+  end
+
+
+app/models/tweet.rb:
+
+  def to_s
+    text.gsub(/(@\w+|https?\S+|#\w+)/,"").strip
+  end
+
+  def self.parse(item)
+    {:tweet_id => item['id_str'],
+     :text => item['text'],
+     :date => Time.parse(item['created_at']),
+     :link => "http://twitter.com/#{item['from_user']}/statuses/#{item['id_str']}"
+    }
+  end
+
+#================== user.rb
+
+    def to_s
+      twid
+    end
+
+    def self.create_or_find_by_twid(twid)
+      User.find_by_twid(twid) || User.create! do |u|
+        u.twid = twid
+        Tweeters.instance.users << u
+#          Tweeters.instance.save
+      end
+    end
+  end
+
+
+#================== link.rb
+
+   class Link < Neo4j::Rails::Model
+
+    property :url
+    index :url
+
+    has_n(:tweets).from(:links)
+
+    def self.create_or_find_by_url(url)
+      Link.find_by_url(url) || Link.create!(:url => url)
+    end
+  end
+
+#================== tag.rb
+
+  class Tag < Neo4j::Rails::Model
+    property :name
+    index :name
+    has_n(:tweets).from(:tags)
+    has_n(:used_by_users).from(:used_tags)  # from User
+
+    def to_s
+      "Tag #{name}"
+    end
+
+    def self.create_or_find_by_name(name)
+      Tag.find_by_name(name) || Tag.create! do |tag|
+        tag.name = name
+      end
+    end
+  end
+
+#================== tweeters.rb
+
+ class Tweeters < Neo4j::Rails::Model
+    has_n(:users) # user who has tweeted
+
+    def self.instance
+      @instance ||= create_or_find
+    end
+
+    def self.create_or_find
+      Tweeters.all.first || Tweeters.create!
+    end
+  end
+
+
+#================== RAKE
+
+ # Returns JSON text {'changed': true/false}
+    # If any of the tweets was updated then it will return true
+    # If none of the tweets was updated it will return false
+    def update_tweets(tweet_json)
+        items = JSON.parse(tweet_json)
+        # since we run all this in one transaction we have to remember which user, tags, links we have already created
+        tweets =  []; users = {}; tags = {}; links = {}
+        Neo4j::Transaction.run do
+          changed = items.all? { |item| !Tweet.find_by_tweet_id(item['id_str']) && tweets << update_tweet(item, users, links, tags) }
+          {:return => {:changed => changed, :tweets => tweets.collect{|u| {:text => u.short, :tweet_id => u.tweet_id}}}}.to_json
+        end
+    end
+
+    def update_tweet(item, users, links, tags)
+      tweet = Tweet.create_from_twitter_item(item)
+      twid = item['from_user'].downcase
+      user = users[twid] ||= User.create_or_find_by_twid(twid)
+      user.tweeted << tweet
+      user.save
+
+      tweet.text.gsub(/(@\w+|https?\S+|#\w+)/).each do |t|
+        if t =~ /^@.+/
+          t = t[1..-1].downcase
+          other = users[t] ||= User.create_or_find_by_twid(t)
+          user.knows << other unless t == twid || user.knows.include?(other)
+          user.save
+          tweet.mentions << other
+        end
+
+        if t =~ /https?:.+/
+          link = links[t] ||= Link.create_or_find_by_url(t)
+          tweet.links << link
+        end
+
+        if t =~ /#.+/
+          t = t[1..-1].downcase
+          tag = tags[t] ||= Tag.create_or_find_by_name(t)
+          tweet.tags << tag
+          user.used_tags << tag unless user.used_tags.include?(tag)
+        end
+      end
+
+      user.save!
+      tweet.save!
+      tweet
+    end
+
+This file was modified by JetBrains RubyMine 3.2.4 for binding GitHub repository
