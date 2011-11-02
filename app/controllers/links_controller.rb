@@ -2,7 +2,7 @@ class LinksController < ApplicationController
   # GET /links
   # GET /links.json
   def index
-    @links = Link.all #real
+    @links = Link.real
 
     respond_to do |format|
       format.html # index.html.erb
@@ -14,7 +14,7 @@ class LinksController < ApplicationController
   # GET /links/1.json
   def show
     @link = Link.find(params[:id])
-    @tweets = @link._java_node.outgoing(:tweets).incoming(:redirected_link).depth(2).paginate(:page => params[:page], :per_page => 10)
+    @tweets = @link._java_node.incoming(:links).incoming(:redirected_link).depth(2).filter{|path| path.lastRelationship.getType.to_s == 'links'}.paginate(:page => params[:page], :per_page => 10)
 
     respond_to do |format|
       format.html # show.html.erb

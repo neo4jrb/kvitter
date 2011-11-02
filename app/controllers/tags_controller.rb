@@ -94,7 +94,7 @@ class TagsController < ApplicationController
     while curr_page < 10 && !found_old_tweet do
       result.each do |item|
         parsed_tweet_hash = Tweet.parse(item)
-        found_old_tweet = true && break if Tweet.find_by_tweet_id(:tweet_id => parsed_tweet_hash[:tweet_id])
+        found_old_tweet = true && break if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
         tweet = Tweet.create!(parsed_tweet_hash)
 
         twid = item['from_user'].downcase
@@ -102,7 +102,7 @@ class TagsController < ApplicationController
         user.tweeted << tweet
         user.save
 
-        parse(tweet, user)
+        parse_tweet(tweet, user)
       end
       result.fetch_next_page
       curr_page += 1
@@ -112,12 +112,11 @@ class TagsController < ApplicationController
   end
 
 
-  def parse(tweet, user)
+  def parse_tweet(tweet, user)
     tweet.text.gsub(/(@\w+|https?\S+|#\w+)/).each do |t|
       case t
         when /^@.+/
           t = t[1..-1].downcase
-          puts "T=#{t}"
           next if t.nil?
           other = User.find_or_create_by(:twid => t)
           user.knows << other unless t == user.twid || user.knows.include?(other)
@@ -126,12 +125,11 @@ class TagsController < ApplicationController
         when /#.+/
           t = t[1..-1].downcase
           tag = Tag.find_or_create_by(:name => t)
-          tweet.tags << tag
+          tweet.tags << tag unless tweet.tags.include?(tag)
         when /https?:.+/
-          url = t.gsub(/['”"\*<>{}()]/, '')
+          url = t.gsub(/[^a-zA-Z0-9\-\.~\:\?#\[\]\!\@\$&,\(\)*+=;,]/, '')
           link = Link.find_or_create_by(:url => url)
-          link = link.redirected_link if link.redirected_link
-          tweet.links << link
+          tweet.links << link.redirected_link || link
       end
     end
     tweet.save!

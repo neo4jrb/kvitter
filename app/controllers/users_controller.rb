@@ -6,7 +6,14 @@ class UsersController < ApplicationController
 
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render :json => @users }
+      format.json do
+        nodes = @users.map{|u| {:name => u.twid, :value => u.tweeted.size}}
+        links = []
+        @users.each do |user|
+          links += user.knows.map {|other| { :source => nodes.find_index{|n| n[:name] == user.twid}, :target => nodes.find_index{|n| n[:name] == other.twid}}}
+        end
+        render :json => {:nodes => nodes, :links => links}
+      end
     end
   end
 

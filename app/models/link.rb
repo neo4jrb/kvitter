@@ -26,7 +26,6 @@ class Link < Neo4j::Rails::Model
       puts "  redirect #{redirect}"
       self.redirected_link = Link.find_or_create_by(:url => redirect.strip)
     end
-    self.url = res['location'] || uri.to_s
   rescue Timeout::Error
     puts "Can't acccess #{url}"
   rescue Error

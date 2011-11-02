@@ -5,3 +5,52 @@
  *= require_self
  *= require_tree . 
 */
+
+#list {
+    float: left
+}
+circle.node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+line.link {
+    stroke: #999;
+    stroke-opacity: .6;
+}
+
+nav {
+    float: left;
+    left: 0;
+    width: 100%;
+    padding-bottom: 30px;
+}
+
+nav ul li {
+    float: left;
+}
+
+nav ul li a {
+    display: block;
+    margin-right: 20px;
+    width: 140px;
+    font-size: 14px;
+    line-height: 44px;
+    text-align: center;
+    text-decoration: none;
+    color: #777;
+}
+
+nav ul li a:hover {
+    color: #fff;
+}
+
+nav ul li.selected a {
+    color: #fff;
+}
+
+nav ul li.subscribe a {
+    margin-left: 22px;
+    padding-left: 33px;
+    text-align: left;
+}
