@@ -26,12 +26,11 @@ Download all the dependencies
 
 === 2. Scaffold
 
-  rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id --has_n tags mentions links --has_one tweeted_by:tweeted
-  rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
-  rails generate scaffold Link url:string --indices url --has_n tweets:links short_urls:redirected_link --has_one redirected_link
-  rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
+rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id --has_n tags mentions links --has_one tweeted_by:tweeted
+rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
+rails generate scaffold Link url:string --indices url --has_n tweets:links short_urls:redirected_link --has_one redirected_link
+rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
 
-(it requires Neo4j.rb version >= 1.2.6)
 
 === 3. Start Rails
 
@@ -44,13 +43,7 @@ Open browser: http://localhost:3000/tags
 
 Add the following
 
-app/models/tag.rb:
-
-  def to_s
-    name
-  end
-
-app/controllers/tag_controller.rb:
+==== app/controllers/tag_controller.rb:
 
   def search
     @tag = Tag.find(params[:id])
@@ -60,7 +53,7 @@ app/controllers/tag_controller.rb:
 
     curr_page = 0
     found_old_tweet = false
-    while curr_page < 10 && !found_old_tweet do
+    while curr_page < 2 && !found_old_tweet do
       result.each do |item|
         parsed_tweet_hash = Tweet.parse(item)
         next if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
@@ -104,7 +97,7 @@ app/controllers/tag_controller.rb:
   end
 
 
-app/models/tweet.rb:
+==== app/models/tweet.rb:
 
   def to_s
     text.gsub(/(@\w+|https?\S+|#\w+)/,"").strip
@@ -118,4 +111,110 @@ app/models/tweet.rb:
     }
   end
 
+==== config/routes.rb:
+
+change
+  resource :tags
+to
+  resources :tags do
+    get :search, :on => :member
+  end
+
+==== app/views/tags/show.html.erb
+
+Add a button to the view:
+  <%= button_to "Search", [:search, @tag], :method => :get %>
+
+Test the application now by open a browser http://localhost:3000/tags
+Create a new tag
+and press the button 'search'
+You will now found tweets, users and links
+
+=== Follow URL shortenings
+
+When you looked at all the links, most of them work short urls like http://t.co 
+Since we are more interested on the real link and who has tweeted about that
+we must follow the URL by doing a HTTP head request.
+
+We use a rails before save callback to create a new link which correspond to where
+the short url is directed to. The short link and the real link are connected in a redirected_link.
+
+
+==== app/models/link.rb
+
+  before_save :create_redirect_link
+
+  SHORT_URLS = %w[t.co bit.ly ow.ly goo.gl tiny.cc tinyurl.com doiop.com readthisurl.com memurl.com tr.im cli.gs short.ie kl.am idek.net short.ie is.gd hex.io asterl.in j.mp].to_set
+
+  def to_s
+    url
+  end
+
+  private
+
+  def self.short_url?(url)
+    domain = url.split('/')[2]
+    domain && SHORT_URLS.include?(domain)
+  end
+
+  def create_redirect_link
+    return if !self.class.short_url?(url)
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.read_timeout = 200
+    req = Net::HTTP::Head.new(uri.request_uri)
+    res = http.request(req)
+    redirect = res['location']
+    if redirect && url != redirect
+      self.redirected_link = Link.find_or_create_by(:url => redirect.strip)
+    end
+  rescue Timeout::Error
+    puts "Can't acccess #{url}"
+  rescue Error
+    puts "Can't call #{url}"
+  end
+
+==== app/views/links/show.html.erb
+
+In order to show both outgoing redirected_link and incoming redirected_link (by using short_urls method) add the following:
+
+  <p>
+    <b>Short Urls:</b>
+    <% @link.short_urls do |link| %>
+      <%= link_to link, link %> <br/>
+    <% end %>
+  </p>
+
+  <% if @link.redirected_link %>
+  <p>
+    <b>Redirects to</b>
+    <%= link_to @link.redirected_link, @link.redirected_link %>
+  </p>
+  <% end %>
+
+=== Dont' display URl shortening 
+
+The index page shows all the links, like http://bit.ly and the real URL.
+To only return the real URLs we can use rules, which is a bit similar to scope in ActiveRecord.
+
+==== app/models/links.rb
+
+  rule(:real) { redirected_link.nil?}
+
+This means that it will group all links under the rule :real which does not have a redirected_link
+To return all those nodes, use the class method #real.
+
+==== app/controllers/links_controller.rb
+
+ def index
+    @links = Link.real
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render :json => @links }
+    end
+  end
+
+Since the rules does work by creating relationships when new nodes are created/updated/deleted we must do another
+search or stop the rails server and delete the database 'db/neo4j-developement'
 
