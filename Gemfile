@@ -5,8 +5,7 @@ gem 'rails', '3.1.1'
 # Bundle edge Rails instead:
 # gem 'rails',     :git => 'git://github.com/rails/rails.git'
 
-#gem 'neo4j', '1.2.5'
-gem 'neo4j', :path => '/home/andreas/projects/neo4j'
+gem 'neo4j', '1.2.6'
 
 group :development do
   gem 'rspec-rails'

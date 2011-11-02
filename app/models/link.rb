@@ -5,7 +5,7 @@ class Link < Neo4j::Rails::Model
   has_one(:redirected_link)
   has_n(:short_urls).from(:redirected_link)
 
-  SHORT_URLS = %w[t.co bit.ly ow.ly goo.gl tiny.cc tinyurl.com doiop.com readthisurl.com memurl.com tr.im cli.gs short.ie kl.am idek.net short.ie is.gd hex.io asterl.in].to_set
+  SHORT_URLS = %w[t.co bit.ly ow.ly goo.gl tiny.cc tinyurl.com doiop.com readthisurl.com memurl.com tr.im cli.gs short.ie kl.am idek.net short.ie is.gd hex.io asterl.in j.mp] .to_set
 
   rule(:real) { redirected_link.nil?}
 

@@ -1,12 +1,3 @@
-PATH
-  remote: /home/andreas/projects/neo4j
-  specs:
-    neo4j (1.2.5-java)
-      activemodel (>= 3.0.0)
-      orm_adapter (>= 0.0.3)
-      railties (>= 3.0.0)
-      will_paginate (= 3.0.pre4)
-
 GEM
   remote: http://rubygems.org/
   specs:
@@ -76,6 +67,11 @@ GEM
     multi_json (1.0.3)
     multi_xml (0.4.1)
     multipart-post (1.1.3)
+    neo4j (1.2.6-java)
+      activemodel (>= 3.0.0)
+      orm_adapter (>= 0.0.3)
+      railties (>= 3.0.0)
+      will_paginate (= 3.0.pre4)
     orm_adapter (0.0.5)
     polyglot (0.3.2)
     rack (1.3.5)
@@ -156,7 +152,7 @@ DEPENDENCIES
   jquery-rails
   jruby-openssl
   json
-  neo4j!
+  neo4j (= 1.2.6)
   rails (= 3.1.1)
   rspec-rails
   sass-rails (~> 3.1.4)

@@ -1,0 +1,121 @@
+== Neo4j.rb example application
+
+=== Installation
+
+Make sure you have Java JDK 1.6 installed
+
+Install and use Jruby 1.6.5
+  rvm use jruby-1.6.5
+
+Install Rails (>= 3.1.1)
+  gem install rails
+
+=== 1. Create a rails project
+
+Use my rails template which will disable active record and enable neo4j instead
+
+  rails new kvitter -m http://andreasronge.github.com/rails3.rb
+
+Edit the Gemfile and add the twitter gem
+  cd kvitter
+  emacs Gemfile # and add
+  gem 'twitter'
+
+Download all the dependencies
+  bundle
+
+=== 2. Scaffold
+
+  rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id --has_n tags mentions links --has_one tweeted_by:tweeted
+  rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
+  rails generate scaffold Link url:string --indices url --has_n tweets:links short_urls:redirected_link --has_one redirected_link
+  rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
+
+(it requires Neo4j.rb version >= 1.2.6)
+
+=== 3. Start Rails
+
+Test the basic crud operations
+  rails s
+
+Open browser: http://localhost:3000/tags
+
+=== 4 Search using Twitter API
+
+Add the following
+
+app/models/tag.rb:
+
+  def to_s
+    name
+  end
+
+app/controllers/tag_controller.rb:
+
+  def search
+    @tag = Tag.find(params[:id])
+
+    search = Twitter::Search.new
+    result = search.hashtag(@tag.name)
+
+    curr_page = 0
+    found_old_tweet = false
+    while curr_page < 10 && !found_old_tweet do
+      result.each do |item|
+        parsed_tweet_hash = Tweet.parse(item)
+        next if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
+        tweet = Tweet.create!(parsed_tweet_hash)
+
+        twid = item['from_user'].downcase
+        user = User.find_or_create_by(:twid => twid)
+        user.tweeted << tweet
+        user.save
+
+        parse_tweet(tweet, user)
+      end
+      result.fetch_next_page
+      curr_page += 1
+    end
+
+    redirect_to @tag
+  end
+
+
+  def parse_tweet(tweet, user)
+    tweet.text.gsub(/(@\w+|https?:\/\/[a-zA-Z0-9\-\.~\:\?#\[\]\!\@\$&,\*+=;,\/]+|#\w+)/).each do |t|
+      case t
+        when /^@.+/
+          t = t[1..-1].downcase
+          next if t.nil?
+          other = User.find_or_create_by(:twid => t)
+          user.knows << other unless t == user.twid || user.knows.include?(other)
+          user.save
+          tweet.mentions << other
+        when /#.+/
+          t = t[1..-1].downcase
+          tag = Tag.find_or_create_by(:name => t)
+          tweet.tags << tag unless tweet.tags.include?(tag)
+        when /https?:.+/
+          link = Link.find_or_create_by(:url => t)
+          tweet.links << link.redirected_link || link
+      end
+    end
+    tweet.save!
+  end
+
+
+app/models/tweet.rb:
+
+  def to_s
+    text.gsub(/(@\w+|https?\S+|#\w+)/,"").strip
+  end
+
+  def self.parse(item)
+    {:tweet_id => item['id_str'],
+     :text => item['text'],
+     :date => Time.parse(item['created_at']),
+     :link => "http://twitter.com/#{item['from_user']}/statuses/#{item['id_str']}"
+    }
+  end
+
+
