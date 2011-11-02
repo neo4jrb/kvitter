@@ -26,6 +26,14 @@
   <% end %>
 </p>
 
+<p>
+  <b>Tweets</b><br/>
+  <% @user.tweeted.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+</p>
+
+
 
 <%= link_to 'Edit', edit_user_path(@user) %> |
 <%= link_to 'Back', users_path %>

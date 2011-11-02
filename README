@@ -7,7 +7,7 @@ Make sure you have Java JDK 1.6 installed
 Install and use Jruby 1.6.5
   rvm use jruby-1.6.5
 
-Install Rails (example 3.1.1)
+Install Rails (>= 3.1.1)
   gem install rails
 
 === Create a rails project
@@ -34,12 +34,12 @@ rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_
 
 === Create Tag and Search Twitter API
 
-app/models/tag.rb
+Add the following
 
-  def search
-    search = Twitter::Search.new
-    #search.hashtag(name).each { |p| puts p.inspect }
-    search.hashtag(name)
+app/models/tag.rb:
+
+  def to_s
+    name
   end
 
 app/controllers/tag_controller.rb:

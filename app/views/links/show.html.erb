@@ -1,13 +1,8 @@
 <p id="notice"><%= notice %></p>
 
 <p>
-  <b>Id:</b>
-  <%= @link.id %>
-</p>
-
-<p>
   <b>Url:</b>
-  <%= @link.url %>
+  <%= link_to @link.url, @link.url %>
 </p>
 
 <p>
