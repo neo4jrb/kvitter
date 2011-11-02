@@ -94,7 +94,7 @@ class TagsController < ApplicationController
     while curr_page < 10 && !found_old_tweet do
       result.each do |item|
         parsed_tweet_hash = Tweet.parse(item)
-        found_old_tweet = true && break if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
+        #found_old_tweet = true && break if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
         tweet = Tweet.create!(parsed_tweet_hash)
 
         twid = item['from_user'].downcase
@@ -113,7 +113,7 @@ class TagsController < ApplicationController
 
 
   def parse_tweet(tweet, user)
-    tweet.text.gsub(/(@\w+|https?\S+|#\w+)/).each do |t|
+    tweet.text.gsub(/(@\w+|https?:\/\/[a-zA-Z0-9\-\.~\:\?#\[\]\!\@\$&,\(\)*+=;,\/]+|#\w+)/).each do |t|
       case t
         when /^@.+/
           t = t[1..-1].downcase
@@ -127,8 +127,7 @@ class TagsController < ApplicationController
           tag = Tag.find_or_create_by(:name => t)
           tweet.tags << tag unless tweet.tags.include?(tag)
         when /https?:.+/
-          url = t.gsub(/[^a-zA-Z0-9\-\.~\:\?#\[\]\!\@\$&,\(\)*+=;,]/, '')
-          link = Link.find_or_create_by(:url => url)
+          link = Link.find_or_create_by(:url => t)
           tweet.links << link.redirected_link || link
       end
     end

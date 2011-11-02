@@ -1,7 +1,5 @@
 Kvitter::Application.routes.draw do
 
-  mount Neo::Viz::App => '/neo-viz'
-
   resources :tweets
 
   resources :tags do
