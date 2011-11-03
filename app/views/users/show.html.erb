@@ -10,6 +10,13 @@
   <%= @user.link %>
 </p>
 
+<% if @recommend %>
+<p>
+  <b>Recommend</b>
+  <%= link_to @recommend.twid, @recommend %>
+</p>
+<% end %>
+
 <p>
   <b>Used tags</b>
   <% @user.used_tags.each do |tag| %>

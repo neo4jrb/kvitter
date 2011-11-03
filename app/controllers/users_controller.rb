@@ -22,7 +22,7 @@ class UsersController < ApplicationController
   def show
     @user = User.find(params[:id])
     @knows = @user.knows.paginate(:page => params[:page], :per_page => 10)
-
+    @recommend = recommend(@user)
     @mentioned_from = @user.mentioned_from
 
     respond_to do |format|
@@ -91,11 +91,16 @@ class UsersController < ApplicationController
     end
   end
 
-  def recommend
-    @user = User.find(params[:id])
-    my_tags = @user.used_tags.to_a
+  private
 
-    # find other users using these tags
-    other_people_tags = @user._java_node.outgoing(:knows).incoming(:knows).outgoing(:used_tags).depth(5).filter{|path| path.lastRelationship.rel_type == 'used_tags'}
+  def recommend(user)
+    my_tags = user.used_tags.to_a
+    my_friends = user.knows.to_a
+    # find my users tags and all people using those tags, but exclude my friends
+    # we are here using the raw java API - that's why using _java_node, raw and wrapper
+    friends_friends =  user._java_node.outgoing(:used_tags).incoming(:used_tags).raw.depth(2).filter{|path| path.length == 2 && !my_friends.include?(path.end_node)}
+    # for all those people, find the person who has the max number of same tags as I have
+    found = friends_friends.max_by{|friend| (friend.outgoing(:used_tags).raw.map{|tag| tag[:name]} & my_tags).size }
+    found && found.wrapper # load the ruby wrapper around the neo4j java node
   end
 end

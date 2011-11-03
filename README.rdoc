@@ -1,5 +1,11 @@
 == Neo4j.rb example application
 
+This application shows how to use neo4j together with rails 3.1 by parsing Twitter feeds and creating a social graph.
+It first shows some basic operations which you are probably used to from the ActiveRecord/ActiveModel API.
+In the last section we take real advantage of the neo4j engine by implementing a recommendation algorithm for finding new twitter users.
+
+Have fun and feel free to clone it.
+
 === Installation
 
 Make sure you have Java JDK 1.6 installed
@@ -549,3 +555,32 @@ Show the relationships from and to a tweet:
 Add the following line in the show method after the Tag.find line
 
     @tweets = @tag.tweets.paginate(:page => params[:page], :per_page => 10)
+
+=== Recommendation
+
+==== app/controllers/user_controllers.rb
+
+Add the following:
+
+  def recommend(user)
+    my_tags = user.used_tags.to_a
+    my_friends = user.knows.to_a
+    # find my users tags and all people using those tags, but exclude my friends
+    # we are here using the raw java API - that's why using _java_node, raw and wrapper
+    friends_friends =  user._java_node.outgoing(:used_tags).incoming(:used_tags).raw.depth(2).filter{|path| path.length == 2 && !my_friends.include?(path.end_node)}
+    # for all those people, find the person who has the max number of same tags as I have
+    found = friends_friends.max_by{|friend| (friend.outgoing(:used_tags).raw.map{|tag| tag[:name]} & my_tags).size }
+    found && found.wrapper # load the ruby wrapper around the neo4j java node
+  end
+
+==== app/views/users/show.html.erb
+
+Display an recommendation if available
+
+    <% if @recommend %>
+    <p>
+      <b>Recommend</b>
+      <%= link_to @recommend.twid, @recommend %>
+    </p>
+    <% end %>
+
