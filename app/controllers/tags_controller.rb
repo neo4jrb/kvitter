@@ -132,6 +132,8 @@ class TagsController < ApplicationController
       end
     end
     tweet.save!
+  rescue
   end
+
 
 end
