@@ -90,8 +90,7 @@ class TagsController < ApplicationController
     result = search.hashtag(@tag.name)
 
     curr_page = 0
-    found_old_tweet = false
-    while curr_page < 10 && !found_old_tweet do
+    while curr_page < 15 do
       result.each do |item|
         parsed_tweet_hash = Tweet.parse(item)
         next if Tweet.find_by_tweet_id(parsed_tweet_hash[:tweet_id])
@@ -117,7 +116,6 @@ class TagsController < ApplicationController
       case t
         when /^@.+/
           t = t[1..-1].downcase
-          next if t.nil?
           other = User.find_or_create_by(:twid => t)
           user.knows << other unless t == user.twid || user.knows.include?(other)
           user.save
@@ -126,6 +124,8 @@ class TagsController < ApplicationController
           t = t[1..-1].downcase
           tag = Tag.find_or_create_by(:name => t)
           tweet.tags << tag unless tweet.tags.include?(tag)
+          user.used_tags << tag unless user.used_tags.include?(tag)
+          user.save
         when /https?:.+/
           link = Link.find_or_create_by(:url => t)
           tweet.links << link.redirected_link || link

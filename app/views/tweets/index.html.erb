@@ -1,5 +1,13 @@
 <h1>Listing tweets</h1>
 
+
+  <%= form_for(:tweets, :method => :get) do |f| %>
+  <div class="field">
+    <%= text_field_tag :query %>
+      <%= f.submit "Search" %>
+  </div>
+  <% end %>
+
 <table>
   <tr>
     <th>Text</th>
@@ -25,5 +33,7 @@
 </table>
 
 <br />
+
+<%= will_paginate(@tweets) %>
 
 <%= link_to 'New Tweet', new_tweet_path %>

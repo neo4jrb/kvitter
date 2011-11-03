@@ -90,4 +90,12 @@ class UsersController < ApplicationController
       format.json { head :ok }
     end
   end
+
+  def recommend
+    @user = User.find(params[:id])
+    my_tags = @user.used_tags.to_a
+
+    # find other users using these tags
+    other_people_tags = @user._java_node.outgoing(:knows).incoming(:knows).outgoing(:used_tags).depth(5).filter{|path| path.lastRelationship.rel_type == 'used_tags'}
+  end
 end

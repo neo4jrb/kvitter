@@ -10,6 +10,13 @@
   <%= @user.link %>
 </p>
 
+<p>
+  <b>Used tags</b>
+  <% @user.used_tags.each do |tag| %>
+    <%= link_to tag.name, tag %> <br/>
+  <% end %>
+</p>
+
 
 <p>
   <b>Knows:</b><br/>

@@ -2,7 +2,12 @@ class TweetsController < ApplicationController
   # GET /tweets
   # GET /tweets.json
   def index
-    @tweets = Tweet.all
+    query = params[:query]
+    if query && !query.empty?
+      @tweets = Tweet.all("text:#{query}", :type => :fulltext).paginate(:page => params[:page], :per_page => 10)
+    else
+      @tweets = Tweet.all.paginate(:page => params[:page], :per_page => 10)
+    end
 
     respond_to do |format|
       format.html # index.html.erb

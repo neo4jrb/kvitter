@@ -5,6 +5,8 @@ class Tweet < Neo4j::Rails::Model
   property :tweet_id, :type => String
 
   index :tweet_id
+  index :date
+  index :text, :type => :fulltext
 
   has_n :tags
   has_n :mentions
