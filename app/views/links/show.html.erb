@@ -7,7 +7,7 @@
 
 <p>
   <b>Short Urls:</b>
-  <% @link.short_urls do |link| %>
+  <% @link.short_urls.each do |link| %>
     <%= link_to link, link %> <br/>
   <% end %>
 </p>

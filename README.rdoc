@@ -26,11 +26,16 @@ Download all the dependencies
 
 === 2. Scaffold
 
-rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id --has_n tags mentions links --has_one tweeted_by:tweeted
-rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
-rails generate scaffold Link url:string --indices url --has_n tweets:links short_urls:redirected_link --has_one redirected_link
-rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
+Run the following commands:
 
+  rails generate scaffold Tweet text:string link:string date:datetime tweet_id:string --indices tweet_id date text --has_n tags mentions links --has_one tweeted_by:tweeted
+  rails generate scaffold User twid:string link:string --indices twid --has_n tweeted follows knows used_tags mentioned_from:mentions
+  rails generate scaffold Link url:string --indices url --has_n tweets:links short_urls:redirected_link --has_one redirected_link
+  rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
+
+There is nothing magical happening here like neo4j configuration or migrations. 
+It only creates plain new Ruby classes (models, controllers and vies) and routing.
+The relationships and properties are only specified in the model classes.
 
 === 3. Start Rails
 
@@ -98,6 +103,10 @@ Add the following
 
 
 ==== app/models/tweet.rb:
+
+Add a to_s and parse method and change the index type of text to fulltext (we need that later on, see below).
+
+  index :text, :type => :fulltext
 
   def to_s
     text.gsub(/(@\w+|https?\S+|#\w+)/,"").strip
@@ -180,7 +189,7 @@ In order to show both outgoing redirected_link and incoming redirected_link (by 
 
   <p>
     <b>Short Urls:</b>
-    <% @link.short_urls do |link| %>
+    <% @link.short_urls.each do |link| %>
       <%= link_to link, link %> <br/>
     <% end %>
   </p>
@@ -192,9 +201,9 @@ In order to show both outgoing redirected_link and incoming redirected_link (by 
   </p>
   <% end %>
 
-=== Dont' display URl shortening 
+=== Don't display URL shortening 
 
-The index page shows all the links, like http://bit.ly and the real URL.
+The index page shows all the links, including links like http://bit.ly and the the real one.
 To only return the real URLs we can use rules, which is a bit similar to scope in ActiveRecord.
 
 ==== app/models/links.rb
@@ -217,4 +226,165 @@ To return all those nodes, use the class method #real.
 
 Since the rules does work by creating relationships when new nodes are created/updated/deleted we must do another
 search or stop the rails server and delete the database 'db/neo4j-developement'
+
+=== Pagination
+
+The list of all tweets (http://localhost:3000/tweets ) does not look good. It needs some pagination.
+
+==== app/controllers/tweet_controller.rb
+
+Neo4j.rb comes included with the will_paginate gem.
+Change the index method 
+  
+  @tweets = Tweet.all
+to
+  @tweets = Tweet.all.paginate(:page => params[:page], :per_page => 10)
+
+Pagination is support for all traversals and lucene queries.
+
+==== app/views/
+
+Add the following line before the table:
+
+ <%= will_paginate(@tweets) %>
+
+=== Searching and Sorting
+
+Let say we want to sort the tweets by the text. Lucene has two types of indexes: exact and fulltext.
+The exact index is perfect for keywords while the fulltext is for longer texts.
+We have already change the index of text to fulltext for the app/models/tweets.rb
+See http://lucene.apache.org/java/3_0_0/queryparsersyntax.html for the query syntax.
+
+==== app/views/tweets/index.html.erb
+
+Add the following form before the table
+
+  <%= form_for(:tweets, :method => :get) do |f| %>
+  <div class="field">
+    <%= text_field_tag :query %>
+      <%= f.submit "Search" %>
+  </div>
+  <% end %>
+
+
+==== app/controllers/tweets_controller.rb
+
+In the index method we now should handle the query parameter.
+Add the following before the respond_to.
+
+  def index
+    query = params[:query]
+      if query && !query.empty?
+        @tweets = Tweet.all("text:#{query}", :type => :fulltext).paginate(:page => params[:page], :per_page => 10)
+      else
+        @tweets = Tweet.all.paginate(:page => params[:page], :per_page => 10)
+      end
+  
+    # respond_to ...
+  end
+
+Test it !
+
+
+=== Add SVG Visualization !
+
+Would it not be cool to visulize who knows who ?
+
+==== Download the D3 Javascript library
+
+Download the D3 version 2.4.6 javascript library from https://github.com/mbostock/d3/archives/master.
+
+Unzip it and move the following files to the app/assets/javascript folder
+* d3.geom.js
+* d3.js
+* d3.layout.js
+
+==== app/controllers/users_controller.rb
+
+Create a JSON API needed by the javascript
+
+  def index
+    @users = User.all
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json do
+        nodes = @users.map{|u| {:name => u.twid, :value => u.tweeted.size}}
+        links = []
+        @users.each do |user|
+          links += user.knows.map {|other| { :source => nodes.find_index{|n| n[:name] == user.twid}, :target => nodes.find_index{|n| n[:name] == other.twid}}}
+        end
+        render :json => {:nodes => nodes, :links => links}
+      end
+    end
+  end
+
+Test the API, open a browser http://localhost:3000/users.json
+it should return something like this:
+
+  {"nodes":[{"name":"geoaxis","value":1},{"name":"peterneubauer","value":1},{"name":"dolugen","value":1},{"name":"neo4j","value":8},{"name":"emileifrem","value":1},{"name":"linnbar_consult","value":1},{"name":"skillsmatter","value":0},{"name":"swgoof","value":1},{"name":"bytor99999","value":0},{"name":"teropaananen","value":1},{"name":"tobyorourke","value":1},{"name":"sannegrinovero","value":1},{"name":"emmanuelbernard","value":0},{"name":"jimwebber","value":0},{"name":"ianrobinson","value":0},{"name":"mesirii","value":1},{"name":"kings13y","value":0},{"name":"chitrasen","value":1},{"name":"einarhreindal","value":1},{"name":"smunchang","value":1},{"name":"technige","value":1},{"name":"josh_adell","value":1},{"name":"mmuekk","value":1},{"name":"asbkar","value":1},{"name":"noppanit","value":1},{"name":"roddare","value":1},{"name":"tanyaespe","value":1},{"name":"erikusaj","value":1},{"name":"druidjaidan","value":1}],"links":[{"source":0,"target":1},{"source":2,"target":3},{"source":2,"target":4},{"source":3,"target":7},{"source":3,"target":4},{"source":3,"target":8},{"source":3,"target":9},{"source":3,"target":10},{"source":3,"target":11},{"source":3,"target":12},{"source":3,"target":13},{"source":3,"target":14},{"source":3,"target":1},{"source":3,"target":16},{"source":4,"target":9},{"source":5,"target":6},{"source":7,"target":4},{"source":9,"target":4},{"source":10,"target":4},{"source":11,"target":12},{"source":11,"target":13},{"source":11,"target":14},{"source":15,"target":9},{"source":15,"target":4},{"source":17,"target":9},{"source":17,"target":4},{"source":18,"target":6},{"source":19,"target":4},{"source":19,"target":3},{"source":20,"target":21},{"source":22,"target":6},{"source":23,"target":6},{"source":24,"target":1},{"source":25,"target":1},{"source":26,"target":4},{"source":26,"target":3},{"source":27,"target":6},{"source":28,"target":6}]}
+
+
+
+==== app/assets/javascripts/users.js
+
+Add the following coffeescript (be careful with the indentation):
+
+  # Place all the behaviors and hooks related to the matching controller here.
+  # All this logic will automatically be available in application.js.
+  # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
+
+  $(document).ready ->
+    w = 1260
+    h = 1300
+    fill = d3.scale.category20()
+ 
+    vis = d3.select("#graph").append("svg:svg").attr("width", w).attr("height", h)
+
+    d3.json("/users.json", (json) ->
+      force = d3.layout.force()
+        .charge(-320)
+        .linkDistance(160)
+        .nodes(json.nodes)
+        .links(json.links)
+        .size([w, h])
+        .start()
+
+      link = vis.selectAll("line.link")
+        .data(json.links)
+        .enter().append("svg:line")
+        .attr("class", "link")
+        .style("stroke-width", (d) -> Math.sqrt(d.value))
+        .attr("x1", (d) -> d.source.x)
+        .attr("y1", (d) -> d.source.y)
+        .attr("x2", (d) -> d.target.x)
+        .attr("y2", (d) -> d.target.y)
+
+      node = vis.selectAll("g.node")
+        .data(json.nodes)
+        .enter().append("svg:g")
+        .attr("transform", (d) -> "translate(" + d.x + "," + d.y + ")")
+        .attr("class", "node")
+        .call(force.drag)
+  
+      node.append("svg:circle")
+        .attr("r", (d) -> if d.value > 25 then 50 else d.value*2 + 5)
+        .style("fill", (d) -> '#fea')
+  
+      node.append("svg:title").text((d) -> d.name)
+      node.append("svg:text")
+        .attr("text-anchor", "middle")
+        .attr("dy", ".3em")
+        .text((d) -> d.name)
+
+      vis.style("opacity", 1e-6)
+        .transition()
+        .duration(0)
+        .style("opacity", 1)
+
+      force.on("tick", ->
+        link.attr("x1", (d) -> d.source.x).attr("y1", (d) -> d.source.y).attr("x2", (d) -> d.target.x).attr("y2", (d) -> d.target.y)
+        node.attr("transform", (d) -> "translate(" + d.x + "," + d.y + ")")
+      )
+    )
 
