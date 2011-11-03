@@ -404,12 +404,13 @@ Add the following at the bottom of the file
 ==== app/assets/javascripts/application.js
 
 Make sure things are loading in the correct order.
-Add a require d3 before requiring everything else.
 
   //= require jquery
   //= require jquery_ujs
   //= require d3
-  //= require_tree .
+  //= require d3.geom
+  //= require d3.layout
+  //= require users
 
 
 ==== app/assets/stylesheets/application.css
