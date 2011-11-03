@@ -46,9 +46,12 @@ Open browser: http://localhost:3000/tags
 
 === 4 Search using Twitter API
 
-Add the following
+Add the following:
 
 ==== app/controllers/tag_controller.rb:
+
+The following code does a twitter search and parses the result.
+It creates and connects the Tweet, Link, User and Tag model classes.
 
   def search
     @tag = Tag.find(params[:id])
@@ -141,12 +144,12 @@ You will now found tweets, users and links
 
 === Follow URL shortenings
 
-When you looked at all the links, most of them work short urls like http://t.co 
-Since we are more interested on the real link and who has tweeted about that
+When you looked at all the links, most of them are short urls like http://t.co
+Since we are more interested in the real link and who has tweeted about them
 we must follow the URL by doing a HTTP head request.
 
-We use a rails before save callback to create a new link which correspond to where
-the short url is directed to. The short link and the real link are connected in a redirected_link.
+We use a before save callback to create a the real link which correspond to where
+the short url is directed to. The short link and the real link are connected in a redirected_link relationship.
 
 
 ==== app/models/link.rb
