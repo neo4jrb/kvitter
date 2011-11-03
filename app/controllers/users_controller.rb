@@ -2,11 +2,14 @@ class UsersController < ApplicationController
   # GET /users
   # GET /users.json
   def index
-    @users = User.all
-
     respond_to do |format|
-      format.html # index.html.erb
+      format.html do
+        query = params[:query]
+        @user = User.find_by_twid(query) if query && !query.empty?
+        redirect_to @user if @user
+      end
       format.json do
+        @users = User.all
         nodes = @users.map{|u| {:name => u.twid, :value => u.tweeted.size}}
         links = []
         @users.each do |user|

@@ -3,16 +3,16 @@
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 
 $(document).ready ->
-  w = 1260
-  h = 1300
+  w = 1600
+  h = 1600
   fill = d3.scale.category20()
 
   vis = d3.select("#graph").append("svg:svg").attr("width", w).attr("height", h)
 
   d3.json("/users.json", (json) ->
     force = d3.layout.force()
-      .charge(-320)
-      .linkDistance(160)
+      .charge(-220)
+      .linkDistance(120)
       .nodes(json.nodes)
       .links(json.links)
       .size([w, h])

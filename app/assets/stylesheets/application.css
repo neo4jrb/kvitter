@@ -6,9 +6,6 @@
  *= require_tree . 
 */
 
-#list {
-    float: left
-}
 circle.node {
     stroke: #fff;
     stroke-width: 1.5px;

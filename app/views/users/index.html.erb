@@ -1,29 +1,8 @@
-<div id="list">
-<h1>Listing users</h1>
-
-<table>
-  <tr>
-    <th>Twid</th>
-    <th>Link</th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </tr>
-
-<% @users.each do |user| %>
-  <tr>
-    <td><%= user.twid %></td>
-    <td><%= user.link %></td>
-    <td><%= link_to 'Show', user %></td>
-    <td><%= link_to 'Edit', edit_user_path(user) %></td>
-    <td><%= link_to 'Destroy', user, :confirm => 'Are you sure?', :method => :delete %></td>
-  </tr>
-<% end %>
-</table>
-
-<br />
-
-<%= link_to 'New User', new_user_path %>
-</div>
+  <%= form_for(:tweets, :method => :get) do |f| %>
+  <div class="field">
+    <%= text_field_tag :query %>
+      <%= f.submit "Search user" %>
+  </div>
+  <% end %>
 
 <div id='graph'> </div>

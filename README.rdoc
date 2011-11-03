@@ -225,6 +225,7 @@ This means that it will group all links under the rule :real which does not have
 To return all those nodes, use the class method #real.
 
 Btw, the Neo4j::Rails::Model#all method is also implemented as a rule.
+You can also chain rules, just like scopes in Active Record.
 
 ==== app/controllers/links_controller.rb
 
@@ -441,35 +442,35 @@ Open a browser http://localhost:3000/users and scroll down
 ==== app/views/users/show.erb
 Add the following before the link_to lines
 
-<p>
-  <b>Used tags</b>
-  <% @user.used_tags.each do |tag| %>
-    <%= link_to tag.name, tag %> <br/>
-  <% end %>
-</p>
+  <p>
+    <b>Used tags</b>
+    <% @user.used_tags.each do |tag| %>
+      <%= link_to tag.name, tag %> <br/>
+    <% end %>
+  </p>
 
 
-<p>
-  <b>Knows:</b><br/>
-  <% @knows.each do |user| %>
-    <%= link_to user, user %> <br/>
-  <% end %>
-  <%= will_paginate(@knows) %>
-</p>
+  <p>
+    <b>Knows:</b><br/>
+    <% @knows.each do |user| %>
+      <%= link_to user, user %> <br/>
+    <% end %>
+    <%= will_paginate(@knows) %>
+  </p>
 
-<p>
-  <b>Mentioned from:</b><br/>
-  <% @mentioned_from.each do |tweet| %>
-    <%= link_to tweet, tweet %> <br/>
-  <% end %>
-</p>
+  <p>
+    <b>Mentioned from:</b><br/>
+    <% @mentioned_from.each do |tweet| %>
+      <%= link_to tweet, tweet %> <br/>
+    <% end %>
+  </p>
 
-<p>
-  <b>Tweets</b><br/>
-  <% @user.tweeted.each do |tweet| %>
-    <%= link_to tweet, tweet %> <br/>
-  <% end %>
-</p>
+  <p>
+    <b>Tweets</b><br/>
+    <% @user.tweeted.each do |tweet| %>
+      <%= link_to tweet, tweet %> <br/>
+    <% end %>
+  </p>
 
 
 ==== app/controllers/users_controller.rb
@@ -560,16 +561,24 @@ Add the following line in the show method after the Tag.find line
 
 ==== app/controllers/user_controllers.rb
 
+The following algorithm work like this.
+
+  1. Get all the users who are also using my tags.
+  2. For each of those users get their used tags and compare with mine.
+  3. Select the user who has the most similar tags as I have.
+
 Add the following:
 
   def recommend(user)
     my_tags = user.used_tags.to_a
     my_friends = user.knows.to_a
-    # find my users tags and all people using those tags, but exclude my friends
+
     # we are here using the raw java API - that's why using _java_node, raw and wrapper
-    friends_friends =  user._java_node.outgoing(:used_tags).incoming(:used_tags).raw.depth(2).filter{|path| path.length == 2 && !my_friends.include?(path.end_node)}
-    # for all those people, find the person who has the max number of same tags as I have
-    found = friends_friends.max_by{|friend| (friend.outgoing(:used_tags).raw.map{|tag| tag[:name]} & my_tags).size }
+    other_users =  user._java_node.outgoing(:used_tags).incoming(:used_tags).raw.depth(2).filter{|path| path.length == 2 && !my_friends.include?(path.end_node)}
+
+    # for all those users, find the person who has the max number of same tags as I have
+    found = other_users.max_by{|friend| (friend.outgoing(:used_tags).raw.map{|tag| tag[:name]} & my_tags).size }
+
     found && found.wrapper # load the ruby wrapper around the neo4j java node
   end
 
