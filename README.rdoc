@@ -288,7 +288,7 @@ Test it !
 
 === Add SVG Visualization !
 
-Would it not be cool to visulize who knows who ?
+Would it not be cool to visualize who knows who ?
 
 ==== Download the D3 Javascript library
 
@@ -387,4 +387,149 @@ Add the following coffeescript (be careful with the indentation):
         node.attr("transform", (d) -> "translate(" + d.x + "," + d.y + ")")
       )
     )
+==== app/views/users/index.html.erb
 
+Add the following at the bottom of the file
+
+  <div id='graph'> </div>
+
+
+==== app/assets/javascripts/application.js
+
+Make sure things are loading in the correct order
+Add a require d3 before requiring everything else.
+
+  //= require jquery
+  //= require jquery_ujs
+  //= require d3
+  //= require_tree .
+
+
+==== app/assets/stylesheets/application.css
+
+circle.node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+line.link {
+    stroke: #999;
+    stroke-opacity: .6;
+}
+
+==== Test it
+
+Open a browser http://localhost:3000/users and scroll down 
+
+
+=== Better Navigation for Users
+
+==== app/views/users/show.erb
+Add the following before the link_to lines
+
+<p>
+  <b>Knows:</b><br/>
+  <% @knows.each do |user| %>
+    <%= link_to user, user %> <br/>
+  <% end %>
+  <%= will_paginate(@knows) %>
+</p>
+
+<p>
+  <b>Mentioned from:</b><br/>
+  <% @mentioned_from.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+</p>
+
+<p>
+  <b>Tweets</b><br/>
+  <% @user.tweeted.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+</p>
+
+
+==== app/controllers/users_controller.rb
+
+Change the show function to:
+
+  def show
+    @user = User.find(params[:id])
+    @knows = @user.knows.paginate(:page => params[:page], :per_page => 10)
+
+    @mentioned_from = @user.mentioned_from
+
+    respond_to do |format|
+      format.html # show.html.erb
+      format.json { render :json => @user }
+    end
+  end
+
+Notice that we do pagination of a traversal (knows).
+
+=== Better Navigation for Tweets
+
+==== app/views/tweets/show.html.rb
+
+Show the relationships from and to a tweet:
+
+    <p>
+      <b>Text:</b>
+      <%= @tweet.text %>
+    </p>
+
+    <p>
+      <b>Link:</b>
+      <%= link_to @tweet.link, @tweet.link  %>
+    </p>
+
+    <p>
+      <b>Date:</b>
+      <%= @tweet.date %>
+    </p>
+
+    <p>
+      <b>Tweet:</b>
+      <%= @tweet.tweet_id %>
+    </p>
+
+
+    <p>
+      <b>Tweeted by</b>
+      <%= link_to @tweet.tweeted_by, @tweet.tweeted_by %>
+    </p>
+
+    <p>
+      <b>Tags:</b><br/>
+      <% @tweet.tags.each do |tag| %>
+        <%= link_to tag.name, tag %> <br/>
+      <% end %>
+    </p>
+
+
+    <p>
+      <b>Links:</b><br/>
+      <% @tweet.links.each do |link| %>
+        <%= link_to link, link %> <br/>
+      <% end %>
+    </p>
+
+
+=== Better Navigation for Tags
+
+==== app/views/tags/show.html.erb
+
+<p>
+  <b>Tweets:</b><br/>
+  <% @tweets.each do |tweet| %>
+    <%= link_to tweet, tweet %> <br/>
+  <% end %>
+  <%= will_paginate(@tweets) %>
+</p>
+
+==== app/controller/
+
+Add the following line in the show method after the Tag.find line
+
+    @tweets = @tag.tweets.paginate(:page => params[:page], :per_page => 10)
