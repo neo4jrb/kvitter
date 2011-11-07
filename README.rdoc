@@ -567,7 +567,9 @@ The following algorithm work like this.
   2. For each of those users get their used tags and compare with mine.
   3. Select the user who has the most similar tags as I have.
 
-Add the following:
+Add the following at the bottom of the file user_controllers.rb
+  
+  private
 
   def recommend(user)
     my_tags = user.used_tags.to_a
@@ -581,6 +583,21 @@ Add the following:
 
     found && found.wrapper # load the ruby wrapper around the neo4j java node
   end
+
+==== app/controllers/user_controllers.rb
+
+Add one line to the show method:
+
+  def show
+    @user = User.find(params[:id])
+    @recommend = recommend(@user)
+
+    respond_to do |format|
+      format.html # show.html.erb
+      format.json { render :json => @user }
+    end
+  end
+
 
 ==== app/views/users/show.html.erb
 
