@@ -5,7 +5,7 @@ class UsersController < ApplicationController
     respond_to do |format|
       format.html do
         query = params[:query]
-        @user = User.find_by_twid(query) if query && !query.empty?
+        @user = User.find_by_twid(query) if query.present?
         redirect_to @user if @user
       end
       format.json do

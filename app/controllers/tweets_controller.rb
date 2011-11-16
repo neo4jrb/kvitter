@@ -3,7 +3,7 @@ class TweetsController < ApplicationController
   # GET /tweets.json
   def index
     query = params[:query]
-    if query && !query.empty?
+    if query.present?
       @tweets = Tweet.all("text:#{query}", :type => :fulltext).paginate(:page => params[:page], :per_page => 10)
     else
       @tweets = Tweet.all.paginate(:page => params[:page], :per_page => 10)

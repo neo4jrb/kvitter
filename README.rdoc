@@ -256,7 +256,7 @@ to
 
 Pagination is support for all traversals and lucene queries.
 
-==== app/views/
+==== app/views/tweets/index.html.erb
 
 Add the following line before the table:
 
@@ -288,7 +288,7 @@ Add the following before the respond_to.
 
   def index
     query = params[:query]
-      if query && !query.empty?
+      if query.present?
         @tweets = Tweet.all("text:#{query}", :type => :fulltext).paginate(:page => params[:page], :per_page => 10)
       else
         @tweets = Tweet.all.paginate(:page => params[:page], :per_page => 10)
