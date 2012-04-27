@@ -8,10 +8,10 @@ Have fun and feel free to clone it.
 
 === Installation
 
-Make sure you have Java JDK 1.6 installed
+Make sure you have Java JDK 1.6+ installed
 
-Install and use Jruby 1.6.5
-  rvm use jruby-1.6.5
+Install latest JRuby, example
+  rvm use jruby-1.6.7
 
 Install Rails (>= 3.1.1)
   gem install rails
@@ -19,13 +19,12 @@ Install Rails (>= 3.1.1)
 === 1. Create a rails project
 
 Use my rails template which will disable active record and enable neo4j instead
-
-  rails new kvitter -m http://andreasronge.github.com/rails3.rb
+  rails new kvitter -m http://andreasronge.github.com/neo4j/rails.rb
 
 Edit the Gemfile and add the twitter gem
   cd kvitter
   emacs Gemfile # and add
-  gem 'twitter'
+  gem 'twitter', '1.7.2'
 
 Download all the dependencies
   bundle
@@ -105,7 +104,7 @@ It creates and connects the Tweet, Link, User and Tag model classes.
           user.save
         when /https?:.+/
           link = Link.find_or_create_by(:url => t)
-          tweet.links << link.redirected_link || link
+          tweet.links << (link.redirected_link || link)
       end
     end
     tweet.save!
@@ -114,9 +113,11 @@ It creates and connects the Tweet, Link, User and Tag model classes.
 
 ==== app/models/tweet.rb:
 
-Add a to_s and parse method and change the index type of text to fulltext (we need that later on, see below).
+Change index on text to fulltext lucene:
 
-  index :text, :type => :fulltext
+  property :text, :type => String, :index => :fulltext
+
+Add a to_s and parse method and change the index type of text to fulltext (we need that later on, see below).
 
   def to_s
     text.gsub(/(@\w+|https?\S+|#\w+)/,"").strip
@@ -129,6 +130,8 @@ Add a to_s and parse method and change the index type of text to fulltext (we ne
      :link => "http://twitter.com/#{item['from_user']}/statuses/#{item['id_str']}"
     }
   end
+
+Notice : in Neo4j it is not neccessarly to specify the types of properties. By setting :type => String we force that each Tweet object will store the property 'type' as strings.
 
 ==== config/routes.rb:
 

@@ -128,7 +128,7 @@ class TagsController < ApplicationController
           user.save
         when /https?:.+/
           link = Link.find_or_create_by(:url => t)
-          tweet.links << link.redirected_link || link
+          tweet.links << (link.redirected_link || link)
       end
     end
     tweet.save!
