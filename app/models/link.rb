@@ -1,6 +1,5 @@
 class Link < Neo4j::Rails::Model
-  property :url, :type => String
-  index :url
+  property :url, :type => String, :index =>:exact
   has_n(:tweets).from(:links)
   has_one(:redirected_link)
   has_n(:short_urls).from(:redirected_link)
@@ -37,6 +36,9 @@ class Link < Neo4j::Rails::Model
     puts "Can't acccess #{url}"
   rescue Error
     puts "Can't call #{url}"
+  rescue Net::HTTPBadResponse
+    puts "Bad response for #{url}"
   end
+
 
 end

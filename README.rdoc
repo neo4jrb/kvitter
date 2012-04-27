@@ -164,38 +164,46 @@ the short url is directed to. The short link and the real link are connected in 
 
 
 ==== app/models/link.rb
+  class Link < Neo4j::Rails::Model
+    property :url, :type => String, :index => :exact
+    has_n(:tweets).from(:links)
+    has_n(:short_urls).from(:redirected_link)
+    has_one :redirected_link
 
-  before_save :create_redirect_link
+    # Add the following:
+    before_save :create_redirect_link
 
-  SHORT_URLS = %w[t.co bit.ly ow.ly goo.gl tiny.cc tinyurl.com doiop.com readthisurl.com memurl.com tr.im cli.gs short.ie kl.am idek.net short.ie is.gd hex.io asterl.in j.mp].to_set
+    SHORT_URLS = %w[t.co bit.ly ow.ly goo.gl tiny.cc tinyurl.com doiop.com readthisurl.com memurl.com tr.im cli.gs short.ie kl.am idek.net short.ie is.gd hex.io asterl.in j.mp].to_set
 
-  def to_s
-    url
-  end
-
-  private
-
-  def self.short_url?(url)
-    domain = url.split('/')[2]
-    domain && SHORT_URLS.include?(domain)
-  end
-
-  def create_redirect_link
-    return if !self.class.short_url?(url)
-    uri = URI.parse(url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 200
-    req = Net::HTTP::Head.new(uri.request_uri)
-    res = http.request(req)
-    redirect = res['location']
-    if redirect && url != redirect
-      self.redirected_link = Link.find_or_create_by(:url => redirect.strip)
+    def to_s
+      url
     end
-  rescue Timeout::Error
-    puts "Can't acccess #{url}"
-  rescue Error
-    puts "Can't call #{url}"
-  end
+
+    private
+
+    def self.short_url?(url)
+      domain = url.split('/')[2]
+      domain && SHORT_URLS.include?(domain)
+    end
+
+    def create_redirect_link
+      return if !self.class.short_url?(url)
+      uri = URI.parse(url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.read_timeout = 200
+      req = Net::HTTP::Head.new(uri.request_uri)
+      res = http.request(req)
+      redirect = res['location']
+      if redirect && url != redirect
+        self.redirected_link = Link.find_or_create_by(:url => redirect.strip)
+      end
+    rescue Timeout::Error
+      puts "Can't acccess #{url}"
+    rescue Error
+      puts "Can't call #{url}"
+    rescue Net::HTTPBadResponse
+      puts "Bad response for #{url}"
+    end
 
 ==== app/views/links/show.html.erb
 
@@ -225,7 +233,7 @@ To only return the real URLs we can use rules, which is a bit similar to scope i
   rule(:real) { redirected_link.nil?}
 
 This means that it will group all links under the rule :real which does not have a redirected_link
-To return all those nodes, use the class method #real.
+To return all those nodes, use the class method #real. Notice you can do some really interesting queries using rules and cypher together, see "Rules-Cypher":https://github.com/andreasronge/neo4j/wiki/Neo4j%3A%3AWrapper-Rules-and-Functions
 
 Btw, the Neo4j::Rails::Model#all method is also implemented as a rule.
 You can also chain rules, just like scopes in Active Record.

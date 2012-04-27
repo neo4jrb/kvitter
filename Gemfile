@@ -5,13 +5,15 @@ gem 'rails', '3.1.1'
 # Bundle edge Rails instead:
 # gem 'rails',     :git => 'git://github.com/rails/rails.git'
 
-gem 'neo4j', '2.0.0.alpha.7"
+gem 'neo4j', '2.0.0.alpha.9'
+gem 'neo4j-will_paginate', :git => 'git://github.com/andreasronge/neo4j-will_paginate.git'
+gem 'will_paginate'
 
 group :development do
   gem 'rspec-rails'
 end
 
-gem 'twitter'
+gem 'twitter', '1.7.2'
 
 gem 'jruby-openssl'
 gem 'json'

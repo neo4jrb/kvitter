@@ -1,12 +1,8 @@
 class Tweet < Neo4j::Rails::Model
-  property :text, :type => String
+  property :text, :type => String, :index => :fulltext
   property :link, :type => String
-  property :date, :type => DateTime
-  property :tweet_id, :type => String
-
-  index :tweet_id
-  index :date
-  index :text, :type => :fulltext
+  property :date, :type => DateTime, :index => :exact
+  property :tweet_id, :type => String, :index => :exact
 
   has_n :tags
   has_n :mentions

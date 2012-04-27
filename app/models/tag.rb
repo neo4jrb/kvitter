@@ -1,7 +1,5 @@
 class Tag < Neo4j::Rails::Model
-  property :name, :type => String
-
-  index :name
+  property :name, :type => String, :index => :exact
 
   has_n(:tweets).from(:tags)
 

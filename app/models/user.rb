@@ -1,8 +1,6 @@
 class User < Neo4j::Rails::Model
-  property :twid, :type => String
+  property :twid, :type => String, :index => :exact
   property :link, :type => String
-
-  index :twid
 
   has_n :tweeted
   has_n :follows
