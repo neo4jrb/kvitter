@@ -10,7 +10,7 @@ class UsersController < ApplicationController
       end
       format.json do
         @users = User.all
-        nodes = @users.map{|u| {:name => u.twid, :value => u.tweeted.size}}
+        nodes = @users.map{|u| {:name => u.twid, :value => u.tweeted.count}}
         links = []
         @users.each do |user|
           links += user.knows.map {|other| { :source => nodes.find_index{|n| n[:name] == user.twid}, :target => nodes.find_index{|n| n[:name] == other.twid}}}
