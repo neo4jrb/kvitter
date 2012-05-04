@@ -255,6 +255,10 @@ search or stop the rails server and delete the database 'db/neo4j-developement'
 === Pagination
 
 The list of all tweets (http://localhost:3000/tweets ) does not look good. It needs some pagination.
+Add the two gem in Gemfile:
+
+  gem 'neo4j-will_paginate', :git => 'git://github.com/andreasronge/neo4j-will_paginate.git'
+  gem 'will_paginate'
 
 ==== app/controllers/tweet_controller.rb
 

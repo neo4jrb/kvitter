@@ -1,11 +1,7 @@
 source 'http://rubygems.org'
 
-gem 'rails', '3.1.1'
-
-# Bundle edge Rails instead:
-# gem 'rails',     :git => 'git://github.com/rails/rails.git'
-
-gem 'neo4j', '2.0.0.alpha.9'
+gem 'rails'
+gem 'neo4j', '2.0.0.rc1'
 gem 'neo4j-will_paginate', :git => 'git://github.com/andreasronge/neo4j-will_paginate.git'
 gem 'will_paginate'
 
