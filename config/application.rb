@@ -5,6 +5,7 @@ require "action_controller/railtie"
 require "action_mailer/railtie"
 require "active_resource/railtie"
 require "rails/test_unit/railtie"
+require 'sprockets/railtie'
 require 'neo4j'
 
 
@@ -54,6 +55,7 @@ module Kvitter
     # Configure where the neo4j database should exist
     config.neo4j.storage_path = "#{config.root}/db/neo4j-#{Rails.env}"
 
+    config.neo4j.identity_map = false
 
     # Enable the asset pipeline
     config.assets.enabled = true

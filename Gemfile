@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rails'
-gem 'neo4j', '2.0.0.rc2'
+gem 'neo4j', '2.0.0'
 gem 'neo4j-will_paginate', :git => 'git://github.com/andreasronge/neo4j-will_paginate.git'
 gem 'will_paginate'
 
