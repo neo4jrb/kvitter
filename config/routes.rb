@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 Kvitter::Application.routes.draw do
 
   resources :tweets

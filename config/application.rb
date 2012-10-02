@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 # -*- coding: undecided -*-
 require File.expand_path('../boot', __FILE__)
 

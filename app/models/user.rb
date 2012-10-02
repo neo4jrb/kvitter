@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class User < Neo4j::Rails::Model
   property :twid, :type => String, :index => :exact
   property :link, :type => String

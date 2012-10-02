@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class TweetsController < ApplicationController
   # GET /tweets
   # GET /tweets.json

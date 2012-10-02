@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class Tweet < Neo4j::Rails::Model
   property :text, :type => String, :index => :fulltext
   property :link, :type => String

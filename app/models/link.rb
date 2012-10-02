@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class Link < Neo4j::Rails::Model
   property :url, :type => String, :index =>:exact
   has_n(:tweets).from(:links)

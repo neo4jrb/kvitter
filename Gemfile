@@ -1,9 +1,11 @@
 source 'http://rubygems.org'
 
-gem 'rails', '3.2.3'
-gem 'neo4j', '2.0.0'
-gem 'neo4j-will_paginate', :git => 'git://github.com/andreasronge/neo4j-will_paginate.git'
+gem 'rails'
+gem 'neo4j'
+gem 'neo4j-will_paginate'
 gem 'will_paginate'
+
+gem 'twitter', '1.7.2'
 
 group :development do
   gem 'rspec-rails'

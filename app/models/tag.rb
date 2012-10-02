@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class Tag < Neo4j::Rails::Model
   property :name, :type => String, :index => :exact
 
