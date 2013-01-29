@@ -39,7 +39,7 @@ Run the following commands:
   rails generate scaffold Tag name:string --indices name --has_n tweets:tags used_by_users:used_tags
 
 There is nothing magical happening here like neo4j configuration or migrations. 
-It only creates plain new Ruby classes (models, controllers and vies) and routing.
+It only creates plain new Ruby classes (models, controllers and views) and routing.
 The relationships and properties are only specified in the model classes.
 
 === 3. Start Rails
@@ -131,7 +131,7 @@ Add a to_s and parse method and change the index type of text to fulltext (we ne
     }
   end
 
-Notice : in Neo4j it is not neccessarly to specify the types of properties. By setting :type => String we force that each Tweet object will store the property 'type' as strings.
+Notice : in Neo4j it is not necessary to specify the types of properties. By setting :type => String we force that each Tweet object will store the property 'type' as strings.
 
 ==== config/routes.rb:
 
@@ -148,7 +148,7 @@ Add a button to the view:
 
   <%= button_to "Search", [:search, @tag], :method => :get %>
 
-Test the application now by open a browser http://localhost:3000/tags
+Test the application now by opening a browser http://localhost:3000/tags
 Create a new tag
 and press the button 'search'
 You will now found tweets, users and links
@@ -249,7 +249,7 @@ You can also chain rules, just like scopes in Active Record.
     end
   end
 
-Since the rules does work by creating relationships when new nodes are created/updated/deleted we must do another
+Since the rules do work by creating relationships when new nodes are created/updated/deleted we must do another
 search or stop the rails server and delete the database 'db/neo4j-developement'
 
 === Pagination
@@ -279,9 +279,9 @@ Add the following line before the table:
 
 === Searching and Sorting
 
-Let say we want to sort the tweets by the text. Lucene has two types of indexes: exact and fulltext.
+Lets say we want to sort the tweets by the text. Lucene has two types of indexes: exact and fulltext.
 The exact index is perfect for keywords while the fulltext is for longer texts.
-We have already change the index of text to fulltext for the app/models/tweets.rb
+We have already changed the index of text to fulltext for the app/models/tweets.rb
 See http://lucene.apache.org/java/3_0_0/queryparsersyntax.html for the query syntax.
 
 ==== app/views/tweets/index.html.erb
@@ -572,15 +572,15 @@ Add the following line in the show method after the Tag.find line
 
     @tweets = @tag.tweets.paginate(:page => params[:page], :per_page => 10)
 
-=== Recommendation
+=== Recommendations
 
 ==== app/controllers/user_controllers.rb
 
-The following algorithm work like this.
+The following algorithm works like this:
 
   1. Get all the users who are also using my tags.
   2. For each of those users get their used tags and compare with mine.
-  3. Select the user who has the most similar tags as I have.
+  3. Select the user who has the most similar tags to mine.
 
 Add the following at the bottom of the file user_controllers.rb
   
@@ -616,7 +616,7 @@ Add one line to the show method:
 
 ==== app/views/users/show.html.erb
 
-Display an recommendation if available
+Display a recommendation if available
 
     <% if @recommend %>
     <p>
